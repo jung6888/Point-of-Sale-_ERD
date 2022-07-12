@@ -1,3 +1,6 @@
+<?php 
+include ('connect.php');
+?>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -23,16 +26,18 @@
                     <span class="text-dark" style="font-size: 2rem">Dashboard</span>  
                     </div>      
                     <div class="d-none d-lg-block d-xl-block col-lg-8 col-xl-9 my-auto" >
-                        <div class="collapse navbar-collapse justify-content-end" >
+                        <div class="collapse navbar-collapse justify-content-end me-1" >
                             <ul class="navbar-nav ">
                                 <li class="nav-item text-dark">
                                    <i class= "fa fa-user fa-lg">
-                                   <span> Welcome <?php 
-         
+                                   
+                                   </i>
+                                   <span>
+                                   Hello <?php 
                                    $msgg = $_SESSION["username"];
                                    echo $msgg;
-                                   ?></span>
-                                   </i>
+                                   ?>
+                                   </span>
                                 </li>
                             </ul>
                     </div>

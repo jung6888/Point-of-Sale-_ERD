@@ -4,7 +4,8 @@
     $phone_number = "";
     $customer_id = "";
     $customer_level = "";
-    include('./connect.php');
+    include('session.php');
+    include('connect.php');
     if(isset($_GET["id"])){
         if($con){
             $qry = mysqli_query($con,"select * from customer where Customer_Id='".$_GET["id"]."'");
@@ -15,13 +16,32 @@
                 $customer_id = $row["Customer_Id"];
                 $customer_level = $row["Level"];
             }
+            $_SESSION["id_update"] = $_GET["id"];
         }
     }
     if(isset($_POST["button_update"])){
-        $qry = mysqli_query($con, "update customer set Customer_Name = '".$_POST["customer_name"]."', Address = '".$_POST["address"]."', Phone_Number = '".$_POST["phone_number"]."', Customer_Id = '".$_POST["customer_id"]."', Level = '".$_POST["customer_level"]."' where Customer_id ='".$_POST["customer_id"]."'");
+        //echo $_POST["customer_name"];
+        //echo $_POST["address"];
+        //echo $_SESSION["id_update"];
+        $con = mysqli_connect("localhost","root","","pos");
+       // $sql = "update Customer set Customer_Name = '".$_POST["customer_name"]."', Address = '".$_POST["address"]."', Phone_Number = '".$_POST["phone_number"]."', Customer_Id = '".$_SESSION["id_update"]."', Level = '".$_POST["customer_level"]."' where Customer_id ='".$_SESSION["id_update"]."'";
+        $sql =  "call edit_cust('".$_POST["customer_name"]."', '".$_POST["address"]."', '".$_POST["phone_number"]."', '".$_SESSION["id_update"]."', '".$_POST["customer_level"]."');";
+        $qry = mysqli_query($con, $sql);
         if($qry){
-            header('Location: customer.php');
+          header('location:confirm.php');
+          if($qry && $_SESSION["final"] == "confirm")
+          {
+            unset($_SESSION["final"]);
+            mysqli_commit($con);
+            
+          }
+          else 
+          {
+            unset($_SESSION["final"]);
+            mysqli_rollback($con);
+          }
         }else{
+            mysqli_rollback($con);
             echo "Failed";
         }
     }
@@ -67,7 +87,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-secondary mx-1" data-bs-dismiss="modal">Cancel</button>
               <input type="submit" name = "button_update" value="Update" class="btn btn-primary"/>
             </div>
           </div>

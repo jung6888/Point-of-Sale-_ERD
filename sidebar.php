@@ -16,17 +16,15 @@
             <div class="bg-white" id="sidebar-wrapper">
                 <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-uppercase border-bottom"><i class="fa fa-cutlery me-1" aria-hidden="true"></i>Group#3</div>
                 <div class="list-group list-group-flush my-3">
-                <a href="#" class="list-group-item list-group-item-action active"><i
+                <a href="dashboard.php" class="list-group-item list-group-item-action active" id="dashboard"><i
                         class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action fw-bold"><i class="fa-solid fa-user-group me-1"></i>Customer</a>
-                <a href="#" class="list-group-item list-group-item-action fw-bold"><i
+                <a href="customer.php" class="list-group-item list-group-item-action fw-bold"><i class="fa-solid fa-user-group me-1"></i>Customer</a>
+                <a href="food.php" class="list-group-item list-group-item-action fw-bold" id="customer"><i
                         class="fas fa-chart-line me-2"></i>Food</a>
-                <a href="#" class="list-group-item list-group-item-action fw-bold"><i
+                <a href="sale.php" class="list-group-item list-group-item-action fw-bold" id="sale"><i
                         class="fas fa-paperclip me-2"></i>Sale</a>
-                <a href="#" class="list-group-item list-group-item-action fw-bold"><i
+                <a href="sale_report.php" class="list-group-item list-group-item-action fw-bold" id="sale_report"><i
                         class="fas fa-shopping-cart me-2"></i>Sale Report</a>
-                <a href="#" class="list-group-item list-group-item-action fw-bold"><i
-                        class="fas fa-map-marker-alt me-2"></i>Instruction</a>
                 <a href="index.php" class="list-group-item list-group-item-action text-danger fw-bold"><i
                         class="fas fa-power-off me-2"></i>Logout</a>
                 </div>

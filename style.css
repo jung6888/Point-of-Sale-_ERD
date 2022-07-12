@@ -46,8 +46,8 @@
     padding: 20px 30px;
   }
   
-  .list-group-item.active {
-    background-color: #009d63;
+  .list-group-item.in-active {
+    background-color: darkgreen;
     color: white;
     font-weight: bold;
     border: none;

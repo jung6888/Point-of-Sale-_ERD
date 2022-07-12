@@ -1,45 +1,87 @@
-<?php
-    if(isset($_POST["button_save"])){
-        $customer_name = "";
-        $address = "";
-        $phone_number = "";
-        $customer_id = "";
-        $customer_level = "";
-        include('./connect.php');
-        $result = mysqli_query($con, "select Customer_Id from customer");
-        if($result){
-          $row = mysqli_num_rows($result);
-        }
-        if($con){
-          $customer_name = $_POST["customer_name"];
-          $address = $_POST["address"];
-          $phone_number = $_POST["phone_number"];
-          $customer_id = $_POST["customer_id"];
-          $customer_level = $_POST["customer_level"];
-            $qry = mysqli_query($con, "insert into customer values(
-                '".$address."',
-                '".$customer_name."',
-                '".$customer_id."',
-                '".$phone_number."',
-                '".$customer_level."'
-            )");
-        }else{
-            echo "Connect failed";
-        }
-    } 
-    // delete button 
-    if(isset($_GET["id"])){
-      $customer_id = $_GET["id"];
-      include('./connect.php');
-      if($con){
-          $qry = mysqli_query($con, "delete from customer where Customer_id='".$customer_id."'");
-          if($qry){
-            header('Location: customer.php');
-          }else{
-              echo "Failed";
-          }
+<?php 
+include ('session.php');
+include ('connect.php');
+$_SESSION["location_page"] = "customer.php";
+if(isset($_POST["button_save"])){
+  $customer_name = "";
+  $address = "";
+  $phone_number = "";
+  $customer_id = "";
+  $customer_level = "";
+  if($con){
+    $customer_name = $_POST["customer_name"];
+    $address = $_POST["address"]; 
+    $phone_number = $_POST["phone_number"];
+    $customer_id = NULL;
+    $customer_level = $_POST["customer_level"];
+    ini_set("pcre.jit", "0");
+    //$sql = "INSERT INTO Customer (Address, Customer_Name, Phone_Number, Level) values ('".$address."', '".$customer_name."', '".$phone_number."', '".$customer_level."')";
+    $sql = "call in_customer('".$address."', '".$customer_name."', '".$phone_number."', '".$customer_level."')";
+    $qry = mysqli_query($con, $sql);
+    if($qry)
+    {
+      header('location:confirm.php');
+      if($qry && $_SESSION["final"] == "confirm")
+      {
+        $_SESSION["final"] = "";
+        mysqli_commit($con);
       }
-  } 
+      else {
+        mysqli_rollback($con);
+      }
+    }
+    
+  }else{
+      echo "Connect failed";
+  }
+  //header("location: customer.php");
+} 
+// delete button 
+if(isset($_GET["id"])){
+$customer_id = $_GET["id"];
+include('connect.php');
+if($con){
+    //$qry = mysqli_query($con, "delete from customer where Customer_id='".$customer_id."'");
+    $qry = mysqli_query($con, "call delete_customer('".$customer_id."');");
+    if($qry){
+      header('location:confirm.php');
+      if($qry && $_SESSION["final"] == "confirm")
+      {
+        $_SESSION["final"] = "";
+        mysqli_commit($con);
+      }
+      else {
+        mysqli_rollback($con);
+      }
+    }else{
+        echo "Failed";
+    }
+}
+} 
+// Filter button and function
+$selected = '';
+
+function get_options($select)
+{
+  $obj = (object) array('ID/ASC'=>"Customer_Id ASC", 'ID/DESC' => "Customer_Id DESC", 'Name/ASC' => "Customer_Name ASC", 'Name/DESC' => "Customer_Name DESC");
+  $optioned = '';
+  foreach($obj as $key => $value)
+  {
+    if($select == $value)
+    {
+      $optioned.='<option value="'.$value.'" selected>'.$key.'</option>';
+    }
+    else
+    {
+      $optioned.='<option value="'.$value.'">'.$key.'</option>';
+    }
+  }
+  return $optioned;
+}
+if(isset($_POST["filter_people"]))
+{
+  $selected = $_POST["filter_people"];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +89,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <link rel="stylesheet" href="customer.css" /> -->
+    <!-- <link rel="stylesheet" href="style.css" /> -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -55,107 +97,127 @@
       crossorigin="anonymous"
     />
   </head>
-  <body>
-    <div class="container-fluid d-flex flex-column md-3">
-      <div class="title p-3"><h1>Customers</h1></div>
-      <div class="sub-title p-3">
-        <h3><a href="dashboard.php">Dashboard</a>/Customers</h3>
-      </div>
-      <div class="d-flex flex-row justify-content-between p-3">
-        <div><button class="back-btn btn btn-secondary">Back</button></div>
-        <div
-          class="total-costumer d-flex justify-content-left align-items-center"
-        >
-          <h3>Total Customer: <?php
-          include('./connect.php');
-        $result = mysqli_query($con, "select Customer_Id from customer");
-        if($result){
-          $row = mysqli_num_rows($result);
-          if($row){
-            echo $row;
-          }
-          mysqli_free_result($result);
-        }
-          ?></h3>
+<body>
+  <div class="d-flex" id="wrapper">
+    <?php 
+        include ("sidebar.php");  
+    ?>
+    <!-- Page Content  -->
+    <div id="page-content-wrapper">
+      <?php 
+      include ("header.php");
+      ?>
+    <!-- Customer body !-->
+    <!-- Search & Filter & Add customer !-->
+      <div class="container-fluid">
+        <div class="row">
+          <h1 class="text-dark text-center"><b>Customer</b></h1>
         </div>
-      </div>
-      <div class="sub-header d-flex justify-content-between p-3">
-        <div class="search-customer w-75">
-          <input
-            placeholder="Search Customer..."
-            class="form-control form-control-lg w-100 p-2 h6"
-          />
-        </div>
-        <button class="add-btn btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#addForm">
-          <span class="h6">Add Customer</span>
-        </button>
-      </div>
-      <div class="modal fade" id="addForm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <form class="modal-dialog" action="<?php echo $_SERVER["PHP_SELF"];?>" method="post">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Add Customer</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                  <label for="recipient-name" class="col-form-label">Customer Name:</label>
-                  <input type="text" class="form-control" id="recipient-name" name="customer_name">
-                </div>
-                <div class="mb-3">
-                  <label for="recipient-name" class="col-form-label">Address:</label>
-                  <input type="text" class="form-control" id="recipient-name" name="address">
-                </div>
-                <div class="mb-3">
-                  <label for="recipient-name" class="col-form-label">Phone Number:</label>
-                  <input type="text" class="form-control" id="recipient-name" name="phone_number">
-                </div>
-                <div class="mb-3">
-                  <label for="recipient-name" class="col-form-label">Customer ID:</label>
-                  <input type="text" class="form-control" id="recipient-name" name="customer_id">
-                </div>
-                <div class="mb-3">
-                  <label for="recipient-name" class="col-form-label">Customer Level:</label>
-                  <select class="form-select" aria-label="Default select example" name="customer_level">
-                    <option selected>Open this select menu</option>
-                    <option value="BRONZE">BRONZE</option>
-                    <option value="SILVER">SILVER</option>
-                    <option value="GOLD">GOLD</option>
-                  </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <input type="submit" name = "button_save" value="Add" class="btn btn-primary"/>
-            </div>
+        <div class="row">
+          <div class="col-lg-1">
+            <form action="<?php $_SERVER["PHP_SELF"]; ?>" method="POST">
+              <select id="inputOrder" class="form-select" name="filter_people" onchange="this.form.submit();">
+              <?php echo get_options($selected);?>
+              </select>
+            </form>
           </div>
-        </form>
+        
+          <div class="col-lg-9">
+            <form class="row" method="post">  
+              <div class="col-lg-11">
+                <input placeholder="Enter Customer Name....." type="text" class="form-control" name="button_search">
+              </div>
+              <div class="col-lg-1 ps-4 pb-2">
+              <button type="submit" class="btn btn-success btn-xs">Search</button>
+              </div>
+            </form>
+          </div>
+          <div class="col-lg-2 ps-5">
+              <button class="add-btn btn btn-primary btn-xs" type="button" data-bs-toggle="modal" data-bs-target="#addForm">
+                <span class="h6">Add Customer</span>
+              </button>
+          </div>
+        </div>
+        <div class="modal fade" id="addForm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <form class="modal-dialog" action="<?php echo $_SERVER["PHP_SELF"];?>" method="post">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Add Customer</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="recipient-name" class="col-form-label">Customer Name:</label>
+                    <input type="text" class="form-control" id="recipient-name" name="customer_name">
+                  </div>
+                  <div class="mb-3">
+                    <label for="recipient-name" class="col-form-label">Address:</label>
+                    <input type="text" class="form-control" id="recipient-name" name="address">
+                  </div>
+                  <div class="mb-3">
+                    <label for="recipient-name" class="col-form-label">Phone Number:</label>
+                    <input type="text" class="form-control" id="recipient-name" name="phone_number">
+                  </div>
+                  <div class="mb-3">
+                    <label for="recipient-name" class="col-form-label">Customer Level:</label>
+                    <select class="form-select" aria-label="Default select example" name="customer_level">
+                      <option selected>Open this select menu</option>
+                      <option value="BRONZE">BRONZE</option>
+                      <option value="SILVER">SILVER</option>
+                      <option value="GOLD">GOLD</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                 <input type="submit" name = "button_save" value="Add" class="btn btn-primary"/>
+                </div>
+              </div>
+            </form>
+        </div>
       </div>
-      
-      <table class="table p-3">
+      <table class="table p-3 ms-2">
         <thead>
           <tr>
-            <th scope="col"> ID </th>
+            <th scope="col"> No. </th>
             <th scope="col"> Customer Name</th>
             <th scope="col"> Address </th>
             <th scope="col"> Phone Number</th>
             <th scope="col"> Customer ID </th>
             <th scope="col"> Customer Level </th>
+            <th scope="col"> Operation </th>
           </tr>
         </thead>
         <tbody>
         <?php
-                $con = mysqli_connect(
-                    "localhost",
-                    "products",
-                    "Pitou11112222",
-                    "pos");
+                $con = mysqli_connect("localhost","root","","pos");
                 if($con){
                     $qry = "";
                     if(isset($_POST["button_search"])){
-                        $qry = mysqli_query($con);
+                        $argu = $_POST["button_search"];
+                        if(isset($_POST["filter_people"]))
+                        {
+                          $qry = mysqli_query($con, "select * from customer where Customer_Name like '$argu%' order by $selected");
+                          //$qry = mysqli_query($con, "call cus_filter_search($argu, $selected);");
+                        }
+                        else 
+                        {
+                          $qry = mysqli_query($con, "select * from customer where Customer_Name like '$argu%'");
+                          //$qry = mysqli_query($con, "call cus_search('".$argu."');");
+                        }
                     }
-                    $qry = mysqli_query($con, "select * from customer");
+                    else
+                    {
+                      if(isset($_POST["filter_people"]))
+                      {
+                        $qry = mysqli_query($con, "select * from customer order by $selected");
+                        //$qry = mysqli_query($con, "call cus_filter(".$selected.");");
+                      }
+                      else 
+                      {
+                        $qry = mysqli_query($con, "call cus_select();");
+                      }
+                    }
                     $num = 1;
                     while($row = mysqli_fetch_array($qry,MYSQLI_ASSOC)){
                         echo "<tr><td>".$num++."</td><td>".$row["Customer_Name"]
@@ -171,6 +233,8 @@
         </tbody>
       </table>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
-  </body>
+  </div>
+   
+</body>
 </html>
+
